@@ -1,0 +1,11 @@
+﻿################################################################################
+# この .gitignore ファイルは Microsoft(R) Visual Studio によって自動的に作成されました。
+################################################################################
+
+/.vs
+/ButtonStudy/bin/Debug/net10.0-windows
+/ButtonStudy/obj
+/IdelAppStudy/bin/Debug/net10.0-windows
+/IdelAppStudy/obj
+/WpfMvvmStudy/bin/Debug/net9.0-windows
+/WpfMvvmStudy/obj
