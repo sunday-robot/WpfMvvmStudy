@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LabelStudy", "WpfMvvmStudy\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ButtonStudy", "ButtonStudy\ButtonStudy.csproj", "{7B54F4D6-E7E9-4EA2-BCA6-7B504F45BB47}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdealAppStudy", "IdelAppStudy\IdealAppStudy.csproj", "{9DAC304F-4BE4-4107-97DC-A95BA02DD57A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdealAppStudy", "IdealAppStudy\IdealAppStudy.csproj", "{9DAC304F-4BE4-4107-97DC-A95BA02DD57A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

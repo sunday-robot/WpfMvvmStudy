@@ -1,18 +1,13 @@
 ﻿using System.Windows.Threading;
 
-namespace LabelStudy;
+namespace IdealAppStudy;
 
 class Program
 {
     [STAThread]
     public static void Main()
     {
-        var model = new MyModel
-        {
-            FirstName = "arthur",
-            MiddleName = "charles",
-            LastName = "clarke"
-        };
+        var model = new MyModel();
 
         var viewModel = new MainWindowViewModel(model);
         var window = new MainWindow(viewModel);

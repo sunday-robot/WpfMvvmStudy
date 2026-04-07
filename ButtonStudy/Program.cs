@@ -1,25 +1,24 @@
 ﻿using System.Windows.Threading;
 
-namespace IdealAppStudy
+namespace IdealAppStudy;
+
+class Program
 {
-    class Program
+    [STAThread]
+    public static void Main()
     {
-        [STAThread]
-        public static void Main()
+        var model = new MyModel
         {
-            var model = new MyModel
-            {
-                FirstName = "ARTHUR",
-                MiddleName = "CHARLES",
-                LastName = "CLARKE"
-            };
+            FirstName = "ARTHUR",
+            MiddleName = "CHARLES",
+            LastName = "CLARKE"
+        };
 
-            var viewModel = new MainWindowViewModel(model);
-            var window = new MainWindow(viewModel);
-            window.Closed += (s, e) => Dispatcher.ExitAllFrames();
-            window.Show();
+        var viewModel = new MainWindowViewModel(model);
+        var window = new MainWindow(viewModel);
+        window.Closed += (s, e) => Dispatcher.ExitAllFrames();
+        window.Show();
 
-            Dispatcher.Run(); // メッセージループ開始
-        }
+        Dispatcher.Run(); // メッセージループ開始
     }
 }

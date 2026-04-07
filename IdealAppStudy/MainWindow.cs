@@ -9,7 +9,7 @@ public class MainWindow : Window
     public MainWindow(MainWindowViewModel viewModel)
     {
         Width = 300;
-        Height = 150;
+        Height = 200;
         Title = "名前表示サンプル";
         Content = CreateContent();
         DataContext = viewModel;
