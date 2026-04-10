@@ -2,7 +2,7 @@
 
 using System.ComponentModel;
 
-namespace IdealAppStudy;
+namespace ButtonStudy;
 
 //  <summary>
 /// FirstName、MiddleName、LastNameの各プロパティを持ち、プロパティ値の変更をクライアントに通知するモデルを表します。
@@ -50,11 +50,11 @@ public class MyModel : INotifyPropertyChanged
     {
         var rand = new Random();
 
-        Thread.Sleep(rand.Next(3000)); // 最大3秒の遅延(重い処理のシミュレーション)
+        //Thread.Sleep(rand.Next(3000)); // 最大3秒の遅延(重い処理のシミュレーション)
 
-        string[] firsts = { "JAMES", "MARY", "MICHAEL" };
-        string[] middles = { "", "MARIE", "ROSE", "LEE" };
-        string[] lasts = { "", "SMITH", "JOHNSON", "WILLIAMS" };
+        var firsts = new string[] { "JAMES", "MARY", "MICHAEL" };
+        var middles = new string[] { "", "MARIE", "ROSE", "LEE" };
+        var lasts = new string[] { "", "SMITH", "JOHNSON", "WILLIAMS" };
 
         switch (rand.Next(3))
         {

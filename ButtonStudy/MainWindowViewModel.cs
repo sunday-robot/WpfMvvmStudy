@@ -1,10 +1,25 @@
 ﻿using System.ComponentModel;
 
-namespace IdealAppStudy;
+namespace ButtonStudy;
 
 public class MainWindowViewModel : INotifyPropertyChanged
 {
     private readonly MyModel _model;
+
+    /// <summary>
+    /// このサンプルでの主役のボタン。
+    /// </summary>
+    public RelayCommand ChangeNameRandomlyCommand { get; }
+
+    /// <summary>
+    /// 上のボタンのenabled/disabledを切り替えるためのボタン。
+    /// </summary>
+    public RelayCommand DisableEnableChangeNameRandomlyCommand { get; }
+
+    /// <summary>
+    /// 主役ボタンのenable/disable状態を保持するフィールド。
+    /// </summary>
+    bool _canChangeNameRandomlyCommandExecute = true;
 
     public MainWindowViewModel(MyModel model)
     {
@@ -27,6 +42,16 @@ public class MainWindowViewModel : INotifyPropertyChanged
                     break;
             }
         };
+
+        // このサンプルでの主役のボタンを生成
+        ChangeNameRandomlyCommand = new RelayCommand(() => _model.ChangeNameRandomly(), ()=>_canChangeNameRandomlyCommandExecute);
+
+        // 上のボタンのenabled/disabledを切り替えるためのボタンを生成
+        DisableEnableChangeNameRandomlyCommand = new RelayCommand(() => {
+            // 主役のボタンの実行可能状態を切り替える(ただメンバ変数を変更するだけでは当然ダメなので、下のRaiseCanExecuteChangedも必要)
+            _canChangeNameRandomlyCommandExecute = !_canChangeNameRandomlyCommandExecute;
+            ChangeNameRandomlyCommand.RaiseCanExecuteChanged();
+        });
     }
 
     public string FirstName => _model.FirstName;
@@ -62,8 +87,6 @@ public class MainWindowViewModel : INotifyPropertyChanged
         if (string.IsNullOrWhiteSpace(name)) return "";
         return char.ToUpper(name[0]) + name[1..].ToLower();
     }
-
-    public void ChangeNameRandomly() => _model.ChangeNameRandomly();
 
     public event PropertyChangedEventHandler? PropertyChanged;
     protected void OnPropertyChanged(string name) =>

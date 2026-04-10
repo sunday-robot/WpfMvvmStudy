@@ -1,6 +1,6 @@
 ﻿using System.Windows.Threading;
 
-namespace IdealAppStudy;
+namespace ButtonStudy;
 
 class Program
 {
