@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ButtonStudy", "ButtonStudy\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdealAppStudy", "IdealAppStudy\IdealAppStudy.csproj", "{9DAC304F-4BE4-4107-97DC-A95BA02DD57A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextBoxStudy", "TextBoxStudy\TextBoxStudy.csproj", "{6F7DB46C-43BB-47F7-BE4D-EE4B3CA82204}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{9DAC304F-4BE4-4107-97DC-A95BA02DD57A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9DAC304F-4BE4-4107-97DC-A95BA02DD57A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9DAC304F-4BE4-4107-97DC-A95BA02DD57A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F7DB46C-43BB-47F7-BE4D-EE4B3CA82204}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F7DB46C-43BB-47F7-BE4D-EE4B3CA82204}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F7DB46C-43BB-47F7-BE4D-EE4B3CA82204}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F7DB46C-43BB-47F7-BE4D-EE4B3CA82204}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
