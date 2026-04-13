@@ -27,7 +27,7 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
     /// Vに対してプロパティの更新を通知する
     /// </summary>
     /// <param name="propertyName"></param>
-    private void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
+    void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     #endregion 基底クラスを設け、そちらに移すべきもの
 
