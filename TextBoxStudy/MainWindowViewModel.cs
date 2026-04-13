@@ -6,11 +6,19 @@ namespace TextBoxStudy;
 public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedListener
 {
     #region 基底クラスを設け、そちらに移すべきもの
-    /// <summary>INotifyPropertyChanged の実装</summary>
+    /// <summary>
+    /// INotifyPropertyChanged の実装<br/>
+    /// プロパティ更新リスナーであるVのリスト
+    /// Vはここに自分をリスナーとして登録する。
+    /// </summary>
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    private void NotifyPropertyChanged([CallerMemberName] string? name = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    /// <summary>
+    /// Vに対してプロパティの更新を通知する
+    /// </summary>
+    /// <param name="propertyName"></param>
+    private void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     #endregion 基底クラスを設け、そちらに移すべきもの
 
     #region メンバ変数

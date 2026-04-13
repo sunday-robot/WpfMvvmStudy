@@ -3,11 +3,13 @@
 ################################################################################
 
 /.vs
-/ButtonStudy/bin/Debug/net10.0-windows
+/ButtonStudy/bin
 /ButtonStudy/obj
-/WpfMvvmStudy/bin/Debug/net9.0-windows
+/WpfMvvmStudy/bin
 /WpfMvvmStudy/obj
-/IdealAppStudy/bin/Debug/net10.0-windows
+/IdealAppStudy/bin
 /IdealAppStudy/obj
+/TextBoxStudy/bin
 /TextBoxStudy/obj
-/TextBoxStudy/bin/Debug/net10.0-windows
+/LabelStudy/bin
+/LabelStudy/obj

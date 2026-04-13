@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.0.11217.181
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LabelStudy", "WpfMvvmStudy\LabelStudy.csproj", "{C05C3B35-B01D-48A3-A49A-6D778E4F7352}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ButtonStudy", "ButtonStudy\ButtonStudy.csproj", "{7B54F4D6-E7E9-4EA2-BCA6-7B504F45BB47}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdealAppStudy", "IdealAppStudy\IdealAppStudy.csproj", "{9DAC304F-4BE4-4107-97DC-A95BA02DD57A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextBoxStudy", "TextBoxStudy\TextBoxStudy.csproj", "{6F7DB46C-43BB-47F7-BE4D-EE4B3CA82204}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LabelStudy", "LabelStudy\LabelStudy.csproj", "{D00C98C4-895D-D772-7EA7-B4788EDD2088}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C05C3B35-B01D-48A3-A49A-6D778E4F7352}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C05C3B35-B01D-48A3-A49A-6D778E4F7352}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C05C3B35-B01D-48A3-A49A-6D778E4F7352}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C05C3B35-B01D-48A3-A49A-6D778E4F7352}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7B54F4D6-E7E9-4EA2-BCA6-7B504F45BB47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7B54F4D6-E7E9-4EA2-BCA6-7B504F45BB47}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7B54F4D6-E7E9-4EA2-BCA6-7B504F45BB47}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -33,6 +29,10 @@ Global
 		{6F7DB46C-43BB-47F7-BE4D-EE4B3CA82204}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F7DB46C-43BB-47F7-BE4D-EE4B3CA82204}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F7DB46C-43BB-47F7-BE4D-EE4B3CA82204}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D00C98C4-895D-D772-7EA7-B4788EDD2088}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D00C98C4-895D-D772-7EA7-B4788EDD2088}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D00C98C4-895D-D772-7EA7-B4788EDD2088}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D00C98C4-895D-D772-7EA7-B4788EDD2088}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -16,35 +16,43 @@ public class MyModel
 {
     #region 後で基底クラスを作って、そちらに移動させるべきもの
     /// <summary>
+    /// 本クラスの主処理を行うスレッド
+    /// </summary>
+    readonly Thread? _modelThread;
+
+    /// <summary>
+    /// アプリケーション終了要求を受けたかどうかを示すフラグ
+    /// </summary>
+    bool _stopRequested = false;
+
+    /// <summary>
     /// コマンドキュー
+    /// VMからの要求をため込む場所
     /// </summary>
     readonly Queue<Action> _commandQueue = new();
 
     /// <summary>
-    /// リスナーのリスト。プロパティの変更に関心のあるクライアントは、ここにリスナーを登録する。
+    /// キュー処理用の同期オブジェクト
     /// </summary>
-    readonly List<IPropertiesChangedListener> _listeners = [];
+    readonly AutoResetEvent _queueEvent = new(false);
 
     /// <summary>
-    /// プロパティ名からリスナー群を取得するための辞書。プロパティ名をキーに、当該プロパティの変更に関心のあるリスナーの集合を値とする。
+    /// プロパティ名からリスナー群を取得するための辞書。<br>
+    /// キー:プロパティ名<br>
+    /// 値:当該プロパティの変更に関心のあるリスナーの集合<br>
     /// </summary>
     readonly Dictionary<string, HashSet<IPropertiesChangedListener>> _propertyNameToListeners = [];
 
-    // ★★★ 追加：キュー処理用の同期オブジェクトとスレッド ★★★
-    readonly AutoResetEvent _queueEvent = new(false);
-    bool _isRunning = true;
-    readonly Thread? _workerThread;
-
     public MyModel()
     {
-        // ★★★ 追加：バックグラウンドスレッド開始 ★★★
-        _workerThread = new Thread(CommandLoop)
+        _modelThread = new Thread(MainLoop)
         {
             IsBackground = true
         };
-        _workerThread.Start();
+        _modelThread.Start();
     }
 
+    #region publicメソッド
     /// <summary>
     /// リスナーを登録する。
     /// </summary>
@@ -52,7 +60,7 @@ public class MyModel
     /// <param name="interestedPropertyNames">リスナーが関心のあるプロパティ名のセット</param>
     public void AddListener(IPropertiesChangedListener listener, params string[] interestedPropertyNames)
     {
-        _listeners.Add(listener);
+        // プロパティ名からリスナー群を取得するための辞書に、リスナーを追加する
         foreach (var name in interestedPropertyNames)
         {
             if (!_propertyNameToListeners.TryGetValue(name, out var value))
@@ -62,7 +70,10 @@ public class MyModel
             }
             value.Add(listener);
         }
-        NotifyToListeners(interestedPropertyNames);
+
+        // 登録されたリスナーに、関心のあるプロパティの現在値(リスナーにとっては初期値)を通知する。これ以降は差分が通知される。
+        var changedPropertySet = CreateChangedProperties(interestedPropertyNames);
+        listener.OnPropertiesChanged(changedPropertySet);
     }
 
     /// <summary>
@@ -71,10 +82,63 @@ public class MyModel
     /// <param name="listener"></param>
     public void RemoveListener(IPropertiesChangedListener listener)
     {
-        _listeners.Remove(listener);
         foreach (var propertyName in _propertyNameToListeners.Keys)
-        {
             _propertyNameToListeners[propertyName].Remove(listener);
+    }
+
+    /// <summary>
+    /// 終了要求
+    /// </summary>
+    public void Stop()
+    {
+        _stopRequested = true;
+        _queueEvent.Set();
+        _modelThread?.Join();
+    }
+    #endregion publicメソッド
+
+    /// <summary>
+    /// VMからの要求をコマンドとしてキューにため込む。
+    /// </summary>
+    /// <param name="action"></param>
+    void EnqueueCommand(Action action)
+    {
+        lock (_commandQueue)
+        {
+            _commandQueue.Enqueue(action);
+        }
+        _queueEvent.Set();
+    }
+
+    /// <summary>
+    /// 本クラスの専用スレッドにて、主処理を行うもの。<br>
+    /// VMからの要求がため込まれたキューから要求を取り出し、実行する
+    /// </summary>
+    void MainLoop()
+    {
+        while (!_stopRequested)
+        {
+            Action? action = null;
+
+            lock (_commandQueue)
+            {
+                if (_commandQueue.Count > 0)
+                    action = _commandQueue.Dequeue();
+            }
+
+            if (action != null)
+            {
+                try
+                {
+                    action();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Command execution error: {ex}");
+                }
+            }
+            else
+                _queueEvent.WaitOne();
         }
     }
 
@@ -104,60 +168,7 @@ public class MyModel
 
         // 各リスナーにプロパティセットを通知する
         foreach (var (listener, properties) in changedPropertiesDictionary)
-            listener.Changed(properties);
-    }
-
-    // ★★★ 追加：コマンドをキューに積む共通メソッド ★★★
-    void EnqueueCommand(Action action)
-    {
-        lock (_commandQueue)
-        {
-            _commandQueue.Enqueue(action);
-        }
-        _queueEvent.Set();
-    }
-
-    // ★★★ 追加：バックグラウンドでキューを処理するループ ★★★
-    void CommandLoop()
-    {
-        while (_isRunning)
-        {
-            Action? action = null;
-
-            lock (_commandQueue)
-            {
-                if (_commandQueue.Count > 0)
-                {
-                    action = _commandQueue.Dequeue();
-                }
-            }
-
-            if (action != null)
-            {
-                try
-                {
-                    action();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Command execution error: {ex}");
-                }
-            }
-            else
-            {
-                _queueEvent.WaitOne();
-            }
-        }
-    }
-
-    /// <summary>
-    /// 終了処理
-    /// </summary>
-    public void Stop()
-    {
-        _isRunning = false;
-        _queueEvent.Set();
-        _workerThread?.Join();
+            listener.OnPropertiesChanged(properties);
     }
     #endregion 後で基底クラスを作って、そちらに移動させるべきもの
 

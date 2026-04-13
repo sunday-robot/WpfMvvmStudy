@@ -2,5 +2,5 @@
 
 public interface IPropertiesChangedListener
 {
-    void Changed(List<ChangedProperty> changedProperties);
+    void OnPropertiesChanged(List<ChangedProperty> changedProperties);
 }

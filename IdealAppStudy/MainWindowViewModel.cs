@@ -1,12 +1,62 @@
 ﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace IdealAppStudy;
 
 public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedListener
 {
-    private readonly MyModel _model;
+    #region 基底クラスを設け、そちらに移すべきもの
+    /// <summary>
+    /// INotifyPropertyChanged の実装<br/>
+    /// プロパティ更新リスナーであるVのリスト
+    /// Vはここに自分をリスナーとして登録する。
+    /// </summary>
+    public event PropertyChangedEventHandler? PropertyChanged;
 
-    public void Changed(List<ChangedProperty> changedProperties)
+    /// <summary>
+    /// Vに対してプロパティ群の更新を通知する
+    /// </summary>
+    /// <param name="propertyNames"></param>
+    protected void NotifyPropertiesChanged(IEnumerable<string> propertyNames)
+    {
+        foreach (var name in propertyNames)
+            NotifyPropertyChanged(name);
+    }
+
+    /// <summary>
+    /// Vに対してプロパティの更新を通知する
+    /// </summary>
+    /// <param name="propertyName"></param>
+    private void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    #endregion 基底クラスを設け、そちらに移すべきもの
+
+    #region メンバ変数
+    readonly MyModel _model;    // TODO Mへの参照だが、必要ないのかもしれない。少なくともこのサンプルアプリでは不要である。
+    #endregion メンバ変数
+
+    #region Vに開陳するプロパティ
+    public string FirstName { get; private set; } = "";
+    public string MiddleName { get; private set; } = "";
+    public string LastName { get; private set; } = "";
+    public string DisplayName { get; private set; } = "";
+    public RelayCommand ChangeNameRandomlyCommand { get; }
+    #endregion Vに開陳するプロパティ
+
+    public MainWindowViewModel(MyModel model)
+    {
+        _model = model;
+        model.AddListener(this, ["FirstName", "MiddleName", "LastName"]);
+
+        ChangeNameRandomlyCommand = new RelayCommand(() => model.ChangeNameRandomly());
+    }
+
+    /// <summary>
+    /// IPropertiesChangedListener の実装
+    /// Mからの通知を受け、このクラスが開陳するプロパティを更新し、Vに通知する。
+    /// </summary>
+    /// <param name="changedProperties"></param>
+    public void OnPropertiesChanged(List<ChangedProperty> changedProperties)
     {
         var changedNames = new HashSet<string>();
         foreach (var changed in changedProperties)
@@ -33,10 +83,7 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
                     break;
             }
         }
-        foreach (var name in changedNames)
-        {
-            OnPropertyChanged(name);
-        }
+        NotifyPropertiesChanged(changedNames);
     }
 
     /// <summary>
@@ -46,7 +93,6 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
     /// ミドルネームがない場合は、"First Last"。
     /// ミドルネームもある場合は、"First M. Last"。
     /// </summary>
-
     void UpdateDisplayName()
     {
         if (LastName.Length == 0)
@@ -56,17 +102,6 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
         else
             DisplayName = $"{Capitalize(FirstName)} {char.ToUpper(MiddleName[0])}. {Capitalize(LastName)}";
     }
-
-    public MainWindowViewModel(MyModel model)
-    {
-        _model = model;
-        _model.AddListener(this, ["FirstName", "MiddleName", "LastName"]);
-    }
-
-    public string FirstName { get; private set; } = "";
-    public string MiddleName { get; private set; } = "";
-    public string LastName { get; private set; } = "";
-    public string DisplayName { get; private set; } = "";
 
     /// <summary>
     /// nameを先頭大文字、残り小文字に変換する
@@ -78,10 +113,4 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
         if (string.IsNullOrWhiteSpace(name)) return "";
         return char.ToUpper(name[0]) + name[1..].ToLower();
     }
-
-    public void ChangeNameRandomly() => _model.ChangeNameRandomly();
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-    protected void OnPropertyChanged(string name) =>
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }

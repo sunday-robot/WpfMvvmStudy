@@ -1,6 +1,5 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 
 namespace IdealAppStudy;
 
@@ -18,46 +17,25 @@ public class MainWindow : Window
     static StackPanel CreateContent()
     {
         var stackPanel = new StackPanel();
-        stackPanel.Children.Add(CreateDisplayNameLabel());
-        stackPanel.Children.Add(CreateFirstNameLabel());
-        stackPanel.Children.Add(CreateMiddleNameLabel());
-        stackPanel.Children.Add(CreateLastNameLabel());
-        stackPanel.Children.Add(CreateChangeNameButton());
+        stackPanel.Children.Add(CreateLabel(nameof(MainWindowViewModel.DisplayName)));
+        stackPanel.Children.Add(CreateLabel(nameof(MainWindowViewModel.FirstName)));
+        stackPanel.Children.Add(CreateLabel(nameof(MainWindowViewModel.MiddleName)));
+        stackPanel.Children.Add(CreateLabel(nameof(MainWindowViewModel.LastName)));
+        stackPanel.Children.Add(CreateButton("Change Name", nameof(MainWindowViewModel.ChangeNameRandomlyCommand)));
         return stackPanel;
     }
 
-    static Label CreateDisplayNameLabel()
+    static Label CreateLabel(string propertyName)
     {
         var label = new Label();
-        label.SetBinding(Label.ContentProperty, new Binding("DisplayName") { Mode = BindingMode.OneWay });
+        label.SetBinding(Label.ContentProperty, propertyName);
         return label;
     }
 
-    static Label CreateFirstNameLabel()
+    static Button CreateButton(string caption, string commandName)
     {
-        var label = new Label();
-        label.SetBinding(Label.ContentProperty, new Binding("FirstName") { Mode = BindingMode.OneWay });
-        return label;
-    }
-
-    static Label CreateMiddleNameLabel()
-    {
-        var label = new Label();
-        label.SetBinding(Label.ContentProperty, new Binding("MiddleName") { Mode = BindingMode.OneWay });
-        return label;
-    }
-
-    static Label CreateLastNameLabel()
-    {
-        var label = new Label();
-        label.SetBinding(Label.ContentProperty, new Binding("LastName") { Mode = BindingMode.OneWay });
-        return label;
-    }
-
-    static Button CreateChangeNameButton()
-    {
-        var button = new Button { Content = "Change Name" };
-        button.Click += (s, e) => ((MainWindowViewModel)button.DataContext).ChangeNameRandomly();
+        var button = new Button { Content = caption };
+        button.SetBinding(Button.CommandProperty, commandName);
         return button;
     }
 }

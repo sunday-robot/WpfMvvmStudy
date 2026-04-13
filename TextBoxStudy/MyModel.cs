@@ -17,7 +17,7 @@ public class MyModel
 
     /// <summary>
     /// コマンドキュー
-    /// VMから要求内容をため込む場所
+    /// VMからの要求をため込む場所
     /// </summary>
     readonly Queue<Action> _commandQueue = new();
 
