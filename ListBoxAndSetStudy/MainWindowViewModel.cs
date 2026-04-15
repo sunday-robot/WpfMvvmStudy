@@ -1,8 +1,10 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using static ListBoxAndSetStudy.CollectionDifference;
 
-namespace IdealAppStudy;
+namespace ListBoxAndSetStudy;
 
 public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedListener
 {
@@ -54,22 +56,49 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
 
     #region メンバ変数
     readonly MyModel _model;
+    private string? _selectedFriendName;
+    string _inputNameText = "";
     #endregion メンバ変数
 
     #region Vに開陳するプロパティ
-    public string FirstName { get; private set; } = "";
-    public string MiddleName { get; private set; } = "";
-    public string LastName { get; private set; } = "";
-    public string DisplayName { get; private set; } = "";
-    public RelayCommand ChangeNameRandomlyCommand { get; }
+    public ObservableCollection<string> FriendNames { get; } = [];
+    public string? SelectedFriendName
+    {
+        get => _selectedFriendName;
+        set
+        {
+            if (_selectedFriendName != value)
+            {
+                _selectedFriendName = value;
+                RemoveNameCommand.RaiseCanExecuteChanged();
+            }
+        }
+    }
+    public string InputNameText
+    {
+        get => _inputNameText;
+        set
+        {
+            _inputNameText = value;
+            AddNameCommand.RaiseCanExecuteChanged();
+        }
+    }
+    public RelayCommand AddNameCommand { get; }
+    public RelayCommand RemoveNameCommand { get; }
     #endregion Vに開陳するプロパティ
 
     public MainWindowViewModel(MyModel model)
     {
         _model = model;
-        model.AddListener(this, ["FirstName", "MiddleName", "LastName"]);
+        model.AddListener(this, ["FriendNames"]);
 
-        ChangeNameRandomlyCommand = new RelayCommand(() => model.ChangeNameRandomly());
+        AddNameCommand = new RelayCommand(
+            () => model.AddName(InputNameText),
+            () => !string.IsNullOrWhiteSpace(InputNameText));
+
+        RemoveNameCommand = new RelayCommand(
+            () => model.RemoveName(SelectedFriendName ?? ""),
+            () => SelectedFriendName != null);
     }
 
     #region 基底クラスで中小メソッドして定義し、サブクラスでそれを実装すべきもの
@@ -77,46 +106,30 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
     {
         switch (modelProperty.Name)
         {
-            case "FirstName":
-                FirstName = (string)modelProperty.Value;
-                UpdateDisplayName();
-                viewModelPropertyNames.Add(nameof(FirstName));
-                viewModelPropertyNames.Add(nameof(DisplayName));
-                break;
-            case "MiddleName":
-                MiddleName = (string)modelProperty.Value;
-                UpdateDisplayName();
-                viewModelPropertyNames.Add(nameof(MiddleName));
-                viewModelPropertyNames.Add(nameof(DisplayName));
-                break;
-            case "LastName":
-                LastName = (string)modelProperty.Value;
-                UpdateDisplayName();
-                viewModelPropertyNames.Add(nameof(LastName));
-                viewModelPropertyNames.Add(nameof(DisplayName));
+            case "FriendNames":
+                foreach (var diff in (IEnumerable<CollectionDifference>)modelProperty.Value)
+                {
+                    switch (diff)
+                    {
+                        case Add add:
+                            FriendNames.Add(Capitalize((string)add.Value));
+                            break;
+                        case Update update:
+                            var index = FriendNames.IndexOf(Capitalize((string)update.OldValue));
+                            FriendNames[index] = Capitalize((string)update.NewValue);
+                            break;
+                        case Delete delete:
+                            FriendNames.Remove(Capitalize((string)delete.Value));
+                            break;
+                    }
+                }
+                viewModelPropertyNames.Add(nameof(FriendNames));
                 break;
             default:
                 throw new NotImplementedException($"Unknown model property name: {modelProperty.Name}");
         }
     }
     #endregion 基底クラスで中小メソッドして定義し、サブクラスでそれを実装すべきもの
-
-    /// <summary>
-    /// 表示用の名前を更新する。
-    /// 
-    /// ファーストネームしかない場合は、"First"のように整形する。
-    /// ミドルネームがない場合は、"First Last"。
-    /// ミドルネームもある場合は、"First M. Last"。
-    /// </summary>
-    void UpdateDisplayName()
-    {
-        if (LastName.Length == 0)
-            DisplayName = Capitalize(FirstName);
-        else if (MiddleName.Length == 0)
-            DisplayName = $"{Capitalize(FirstName)} {Capitalize(LastName)}";
-        else
-            DisplayName = $"{Capitalize(FirstName)} {char.ToUpper(MiddleName[0])}. {Capitalize(LastName)}";
-    }
 
     /// <summary>
     /// nameを先頭大文字、残り小文字に変換する

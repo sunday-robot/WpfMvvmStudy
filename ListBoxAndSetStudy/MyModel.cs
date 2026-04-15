@@ -1,17 +1,8 @@
 ﻿using System.Collections.Immutable;
+using System.Diagnostics;
 
-namespace IdealAppStudy;
+namespace ListBoxAndSetStudy;
 
-/// <summary>
-/// FirstName、MiddleName、LastNameの各プロパティを持ち、プロパティ値の変更をクライアントに通知するモデルを表します。
-/// 一応以下の制約を設けることとしている。
-/// FirstNameは必須。
-/// LastNameは省略可能だが、省略した場合はMiddleNameも省略しなければならない。
-/// MiddleNameは省略可能。
-/// 
-/// 現時点では、非常に単純なデータしか保持していない。コレクションもないし、階層化もされていない。
-/// 
-/// </summary>
 public class MyModel
 {
     #region 後で基底クラスを作って、そちらに移動させるべきもの
@@ -184,12 +175,13 @@ public class MyModel
     {
         switch (propertyName)
         {
-            case "FirstName":
-                return new ChangedProperty("FirstName", _firstName);
-            case "MiddleName":
-                return new ChangedProperty("MiddleName", _middleName);
-            case "LastName":
-                return new ChangedProperty("LastName", _lastName);
+            case "FriendNames":
+                {
+                    var diffs = new List<CollectionDifference>();
+                    foreach (var name in _friendNames)
+                        diffs.Add(new CollectionDifference.Add(name));
+                    return new ChangedProperty("FriendNames", diffs);
+                }
             default:
                 throw new NotImplementedException($"Unknown property name: {propertyName}");
         }
@@ -197,78 +189,38 @@ public class MyModel
     #endregion 基底クラスで抽象メソッドとして宣言し、サブクラスでそれを実装すべきもの
 
     #region サブクラス側で定義すべきもの
-    string _firstName = "JAMES";
-    string _middleName = "MARIE";
-    string _lastName = "SMITH";
+    readonly HashSet<string> _friendNames = [
+        "ALICE",
+        "BOB",
+        "CHARLIE"
+    ];
 
-    readonly Random _rand = new();
-
-    public void SetFirstName(string value)
+    public void AddName(string value)
     {
         EnqueueCommand(() =>
         {
-            _firstName = value.ToUpper();
-            NotifyToListeners(new ChangedProperty("FirstName", _firstName));
-        });
-    }
-
-    public void SetMiddleName(string value)
-    {
-        EnqueueCommand(() =>
-        {
-            _middleName = value.ToUpper();
-            NotifyToListeners(new ChangedProperty("MiddleName", _middleName));
-        });
-    }
-
-    public void SetLastName(string value)
-    {
-        EnqueueCommand(() =>
-        {
-            _lastName = value.ToUpper();
-            NotifyToListeners(new ChangedProperty("LastName", _lastName));
-        });
-    }
-
-    public void ChangeNameRandomly()
-    {
-        EnqueueCommand(() =>
-        {
-            //            Thread.Sleep(_rand.Next(3000)); // 最大3秒の遅延(重い処理のシミュレーション)
-            switch (_rand.Next(3))
+            if (!_friendNames.Add(value.ToUpper()))
             {
-                case 0:
-                    SetNewName(ref _firstName, ["JAMES", "MARY", "MICHAEL"]);
-                    NotifyToListeners(new ChangedProperty("FirstName", _firstName));
-                    break;
-                case 1:
-                    SetNewName(ref _middleName, ["", "MARIE", "ROSE", "LEE"]);
-                    NotifyToListeners(new ChangedProperty("MiddleName", _middleName));
-                    break;
-                case 2:
-                    SetNewName(ref _lastName, ["", "SMITH", "JOHNSON", "WILLIAMS"]);
-                    if ((_lastName.Length == 0) && (_middleName.Length != 0))
-                    {
-                        _middleName = ""; // LastNameが空ならMiddleNameも空にする
-                        NotifyToListeners([new ChangedProperty("MiddleName", _middleName), new ChangedProperty("LastName", _lastName)]);
-                    }
-                    else
-                    {
-                        NotifyToListeners(new ChangedProperty("LastName", _lastName));
-                    }
-                    break;
+                // TODO エラー通知の実装
+                Debug.WriteLine($"Name already exists: {value}");
+                return;
             }
+            NotifyToListeners(new ChangedProperty("FriendNames", new[] { new CollectionDifference.Add(value) }));
         });
     }
 
-    static void SetNewName(ref string currentName, string[] newNameCandidates)
+    public void RemoveName(string value)
     {
-        string newName;
-        do
+        EnqueueCommand(() =>
         {
-            newName = newNameCandidates[new Random().Next(newNameCandidates.Length)];
-        } while (newName == currentName);
-        currentName = newName;
+            if (!_friendNames.Remove(value.ToUpper()))
+            {
+                // TODO エラー通知の実装
+                Debug.WriteLine($"Name does not exists: {value}");
+                return;
+            }
+            NotifyToListeners(new ChangedProperty("FriendNames", new[] { new CollectionDifference.Delete(value) }));
+        });
     }
     #endregion サブクラス側で定義すべきもの
 }

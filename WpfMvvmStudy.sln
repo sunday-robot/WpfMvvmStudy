@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckBoxStudy", "CheckBoxSt
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RadioButtonStudy", "RadioButtonStudy\RadioButtonStudy.csproj", "{7F5D4601-B74C-4359-8E2E-BC3E474EDEB1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ListBoxAndSetStudy", "ListBoxAndSetStudy\ListBoxAndSetStudy.csproj", "{5D8AB451-085F-4ED6-9930-630FAF259BF4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{7F5D4601-B74C-4359-8E2E-BC3E474EDEB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F5D4601-B74C-4359-8E2E-BC3E474EDEB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F5D4601-B74C-4359-8E2E-BC3E474EDEB1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D8AB451-085F-4ED6-9930-630FAF259BF4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D8AB451-085F-4ED6-9930-630FAF259BF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D8AB451-085F-4ED6-9930-630FAF259BF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D8AB451-085F-4ED6-9930-630FAF259BF4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
