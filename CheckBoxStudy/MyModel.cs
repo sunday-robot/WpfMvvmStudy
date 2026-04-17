@@ -72,8 +72,10 @@ public class MyModel
         }
 
         // 登録されたリスナーに、関心のあるプロパティの現在値(リスナーにとっては初期値)を通知する。これ以降は差分が通知される。
-        var changedPropertySet = CreateChangedProperties(interestedPropertyNames);
-        listener.OnPropertiesChanged(changedPropertySet);
+        var currentProperties = new List<ChangedProperty>();
+        foreach (var name in interestedPropertyNames)
+            currentProperties.Add(CreateCurrentProperty(name));
+        listener.OnPropertiesChanged(currentProperties);
     }
 
     /// <summary>
@@ -145,15 +147,12 @@ public class MyModel
     /// <summary>
     /// リスナーに、データモデルの更新内容を通知する
     /// </summary>
-    /// <param name="propertyNameSet">更新されたプロパティ名の集合</param>
-    void NotifyToListeners(params string[] propertyNames)
+    /// <param name="changedProperties">更新されたプロパティ名と、更新の内容</param>
+    void NotifyToListeners(IEnumerable<ChangedProperty> changedProperties)
     {
-        // プロパティ名とその値からなる通知プロパティセットを構築する
-        var changedPropertySet = CreateChangedProperties(propertyNames);
-
         // リスナー別に、通知プロパティセットを構築する
         var changedPropertiesDictionary = new Dictionary<IPropertiesChangedListener, List<ChangedProperty>>();
-        foreach (var changedProperty in changedPropertySet)
+        foreach (var changedProperty in changedProperties)
         {
             foreach (var listener in _propertyNameToListeners.GetValueOrDefault(changedProperty.Name, []))
             {
@@ -170,39 +169,17 @@ public class MyModel
         foreach (var (listener, properties) in changedPropertiesDictionary)
             listener.OnPropertiesChanged(properties);
     }
+
+    void NotifyToListeners(ChangedProperty changedProperty) => NotifyToListeners([changedProperty]);
     #endregion 後で基底クラスを作って、そちらに移動させるべきもの
 
-    #region サブクラス側で定義すべきもの
-    string _firstName = "JAMES";
-    string _middleName = "MARIE";
-    string _lastName = "SMITH";
-    bool _isChangeFirstName = true;
-    bool _isChangeMiddleName = true;
-    bool _isChangeLastName = true;
-
-    List<ChangedProperty> CreateChangedProperties(IEnumerable<string> propertyNameSet)
-    {
-        return [.. propertyNameSet.Select(name =>
-        {
-            return name switch
-            {
-                "FirstName" => new ChangedProperty("FirstName", _firstName),
-                "MiddleName" => new ChangedProperty("MiddleName", _middleName),
-                "LastName" => new ChangedProperty("LastName", _lastName),
-                "IsChangeFirstName" => new ChangedProperty("IsChangeFirstName", _isChangeFirstName),
-                "IsChangeMiddleName" => new ChangedProperty("IsChangeMiddleName", _isChangeMiddleName),
-                "IsChangeLastName" => new ChangedProperty("IsChangeLastName", _isChangeLastName),
-                _ => throw new InvalidOperationException($"Unknown property name: {name}")
-            };
-        })];
-    }
-
+    #region VMに開陳するメソッド群
     public void SetFirstName(string value)
     {
         EnqueueCommand(() =>
         {
             _firstName = value.ToUpper();
-            NotifyToListeners("FirstName");
+            NotifyToListeners(new ChangedProperty("FirstName", _firstName));
         });
     }
 
@@ -211,7 +188,7 @@ public class MyModel
         EnqueueCommand(() =>
         {
             _middleName = value.ToUpper();
-            NotifyToListeners("MiddleName");
+            NotifyToListeners(new ChangedProperty("MiddleName", _middleName));
         });
     }
 
@@ -220,7 +197,7 @@ public class MyModel
         EnqueueCommand(() =>
         {
             _lastName = value.ToUpper();
-            NotifyToListeners("LastName");
+            NotifyToListeners(new ChangedProperty("LastName", _lastName));
         });
     }
 
@@ -231,9 +208,10 @@ public class MyModel
             if (!value && !_isChangeMiddleName && !_isChangeLastName)
                 return;
             _isChangeFirstName = value;
-            NotifyToListeners("IsChangeFirstName");
+            NotifyToListeners(new ChangedProperty("IsChangeFirstName", _isChangeFirstName));
         });
     }
+
     public void SetIsChangeMiddleName(bool value)
     {
         EnqueueCommand(() =>
@@ -241,9 +219,10 @@ public class MyModel
             if (!value && !_isChangeFirstName && !_isChangeLastName)
                 return;
             _isChangeMiddleName = value;
-            NotifyToListeners("IsChangeMiddleName");
+            NotifyToListeners(new ChangedProperty("IsChangeMiddleName", _isChangeMiddleName));
         });
     }
+
     public void SetIsChangeLastName(bool value)
     {
         EnqueueCommand(() =>
@@ -251,20 +230,8 @@ public class MyModel
             if (!value && !_isChangeFirstName && !_isChangeMiddleName)
                 return;
             _isChangeLastName = value;
-            NotifyToListeners("IsChangeLastName");
+            NotifyToListeners(new ChangedProperty("IsChangeLastName", _isChangeLastName));
         });
-    }
-
-    Random _rand = new();
-
-    static void SetNewName(ref string currentName, string[] newNameCandidates)
-    {
-        string newName;
-        do
-        {
-            newName = newNameCandidates[new Random().Next(newNameCandidates.Length)];
-        } while (newName == currentName);
-        currentName = newName;
     }
 
     public void ChangeNameRandomly()
@@ -280,13 +247,13 @@ public class MyModel
                         if (!_isChangeFirstName)
                             continue;
                         SetNewName(ref _firstName, ["JAMES", "MARY", "MICHAEL"]);
-                        NotifyToListeners("FirstName");
+                        NotifyToListeners(new ChangedProperty("FirstName", _firstName));
                         break;
                     case 1:
-                        if (!_isChangeMiddleName)
+                        if (!_isChangeMiddleName || _lastName.Length == 0)  // LastNameが空ならMiddleNameは空文字列のまま
                             continue;
                         SetNewName(ref _middleName, ["", "MARIE", "ROSE", "LEE"]);
-                        NotifyToListeners("MiddleName");
+                        NotifyToListeners(new ChangedProperty("MiddleName", _middleName));
                         break;
                     case 2:
                         if (!_isChangeLastName)
@@ -294,12 +261,12 @@ public class MyModel
                         SetNewName(ref _lastName, ["", "SMITH", "JOHNSON", "WILLIAMS"]);
                         if ((_lastName.Length == 0) && (_middleName.Length != 0))
                         {
-                            _middleName = ""; // LastNameが空ならMiddleNameも空にする
-                            NotifyToListeners("MiddleName", "LastName");
+                            _middleName = ""; // LastNameが空になったらMiddleNameも空にする
+                            NotifyToListeners([new ChangedProperty("MiddleName", _middleName), new ChangedProperty("LastName", _lastName)]);
                         }
                         else
                         {
-                            NotifyToListeners("LastName");
+                            NotifyToListeners(new ChangedProperty("LastName", _lastName));
                         }
                         break;
                 }
@@ -307,5 +274,49 @@ public class MyModel
             }
         });
     }
-    #endregion サブクラス側で定義すべきもの
+    #endregion VMに開陳するメソッド群
+
+    #region 基底クラスで抽象メソッドとして宣言し、サブクラスでそれを実装すべきもの
+    /// <summary>
+    /// VMが本クラスにリスナー登録してきた際に、現在のプロパティの内容を初期値として通知するためのもの
+    /// </summary>
+    /// <param name="propertyName"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    ChangedProperty CreateCurrentProperty(string propertyName)
+    {
+        return propertyName switch
+        {
+            "FirstName" => new ChangedProperty("FirstName", _firstName),
+            "MiddleName" => new ChangedProperty("MiddleName", _middleName),
+            "LastName" => new ChangedProperty("LastName", _lastName),
+            "IsChangeFirstName" => new ChangedProperty("IsChangeFirstName", _isChangeFirstName),
+            "IsChangeMiddleName" => new ChangedProperty("IsChangeMiddleName", _isChangeMiddleName),
+            "IsChangeLastName" => new ChangedProperty("IsChangeLastName", _isChangeLastName),
+            _ => throw new InvalidOperationException($"Unknown property name: {propertyName}")
+        };
+    }
+    #endregion 基底クラスで抽象メソッドとして宣言し、サブクラスでそれを実装すべきもの
+
+    #region privateメンバ
+    string _firstName = "JAMES";
+    string _middleName = "MARIE";
+    string _lastName = "SMITH";
+    bool _isChangeFirstName = true;
+    bool _isChangeMiddleName = true;
+    bool _isChangeLastName = true;
+    readonly Random _rand = new();
+    #endregion privateメンバ
+
+    #region privateメソッド
+    static void SetNewName(ref string currentName, string[] newNameCandidates)
+    {
+        string newName;
+        do
+        {
+            newName = newNameCandidates[new Random().Next(newNameCandidates.Length)];
+        } while (newName == currentName);
+        currentName = newName;
+    }
+    #endregion privateメソッド
 }

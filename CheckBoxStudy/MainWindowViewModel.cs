@@ -1,9 +1,10 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows;
 
 namespace CheckBoxStudy;
 
-public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedListener
+public sealed class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedListener
 {
     #region 基底クラスを設け、そちらに移すべきもの
     /// <summary>
@@ -14,10 +15,29 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
     public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>
+    /// IPropertiesChangedListener の実装
+    /// Mから通知されたデータモデル更新内容を、VMのプロパティに反映し、Vに通知する。
+    /// </summary>
+    /// <param name="modelProperties"></param>
+    public void OnPropertiesChanged(List<ChangedProperty> modelProperties)
+    {
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            // VMのプロパティを更新する
+            var viewModelPropertyNames = new HashSet<string>();
+            foreach (var changedModelProperty in modelProperties)
+                UpdateViewModelProperties(changedModelProperty, viewModelPropertyNames);
+
+            // 更新されたVMのプロパティ名群をVに通知する。
+            NotifyPropertiesChanged(viewModelPropertyNames);
+        });
+    }
+
+    /// <summary>
     /// Vに対してプロパティ群の更新を通知する
     /// </summary>
     /// <param name="propertyNames"></param>
-    protected void NotifyPropertiesChanged(IEnumerable<string> propertyNames)
+    void NotifyPropertiesChanged(IEnumerable<string> propertyNames)
     {
         foreach (var name in propertyNames)
             NotifyPropertyChanged(name);
@@ -31,13 +51,13 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     #endregion 基底クラスを設け、そちらに移すべきもの
 
-    #region メンバ変数
-    readonly MyModel _model;
-    bool _isChangeTargetSelectable = true;
-    bool _isChangeFirstName;
-    bool _isChangeMiddleName;
-    bool _isChangeLastName;
-    #endregion メンバ変数
+    public MainWindowViewModel(MyModel model)
+    {
+        _model = model;
+        model.AddListener(this, ["FirstName", "MiddleName", "LastName", "IsChangeFirstName", "IsChangeMiddleName", "IsChangeLastName"]);
+
+        ChangeNameRandomlyCommand = new RelayCommand(() => model.ChangeNameRandomly());
+    }
 
     #region Vに開陳するプロパティ
     public string FirstName { get; private set; } = "";
@@ -79,63 +99,63 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
     }
     #endregion Vに開陳するプロパティ
 
-    public MainWindowViewModel(MyModel model)
-    {
-        _model = model;
-        model.AddListener(this, ["FirstName", "MiddleName", "LastName", "IsChangeFirstName", "IsChangeMiddleName", "IsChangeLastName"]);
-
-        ChangeNameRandomlyCommand = new RelayCommand(() => model.ChangeNameRandomly());
-    }
-
+    #region 基底クラスで抽象メソッドとして定義し、サブクラスでそれを実装すべきもの
     /// <summary>
-    /// IPropertiesChangedListener の実装
-    /// Mからの通知を受け、このクラスが開陳するプロパティを更新し、Vに通知する。
+    /// Mのデータモデル更新内容を、VMのプロパティに反映する。
+    /// また、更新したVMのプロパティ名群をviewModelPropertyNamesに追加する。
     /// </summary>
-    /// <param name="changedProperties"></param>
-    public void OnPropertiesChanged(List<ChangedProperty> changedProperties)
+    /// <param name="modelProperty"></param>
+    /// <param name="viewModelPropertyNames"></param>
+    /// <exception cref="NotImplementedException"></exception>
+    void UpdateViewModelProperties(ChangedProperty modelProperty, ISet<string> viewModelPropertyNames)
     {
-        var changedNames = new HashSet<string>();
-        foreach (var changed in changedProperties)
+        switch (modelProperty.Name)
         {
-            switch (changed.Name)
-            {
-                case "FirstName":
-                    FirstName = (string)changed.Value;
-                    UpdateDisplayName();
-                    changedNames.Add(nameof(FirstName));
-                    changedNames.Add(nameof(DisplayName));
-                    break;
-                case "MiddleName":
-                    MiddleName = (string)changed.Value;
-                    UpdateDisplayName();
-                    changedNames.Add(nameof(MiddleName));
-                    changedNames.Add(nameof(DisplayName));
-                    break;
-                case "LastName":
-                    LastName = (string)changed.Value;
-                    UpdateDisplayName();
-                    changedNames.Add(nameof(LastName));
-                    changedNames.Add(nameof(DisplayName));
-                    break;
-                case "IsChangeFirstName":
-                    _isChangeFirstName = (bool)changed.Value;
-                    changedNames.Add(nameof(IsChangeFirstName));
-                    break;
-                case "IsChangeMiddleName":
-                    _isChangeMiddleName = (bool)changed.Value;
-                    changedNames.Add(nameof(IsChangeMiddleName));
-                    break;
-                case "IsChangeLastName":
-                    _isChangeLastName = (bool)changed.Value;
-                    changedNames.Add(nameof(IsChangeLastName));
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
+            case "FirstName":
+                FirstName = (string)modelProperty.Value;
+                UpdateDisplayName();
+                viewModelPropertyNames.Add(nameof(FirstName));
+                viewModelPropertyNames.Add(nameof(DisplayName));
+                break;
+            case "MiddleName":
+                MiddleName = (string)modelProperty.Value;
+                UpdateDisplayName();
+                viewModelPropertyNames.Add(nameof(MiddleName));
+                viewModelPropertyNames.Add(nameof(DisplayName));
+                break;
+            case "LastName":
+                LastName = (string)modelProperty.Value;
+                UpdateDisplayName();
+                viewModelPropertyNames.Add(nameof(LastName));
+                viewModelPropertyNames.Add(nameof(DisplayName));
+                break;
+            case "IsChangeFirstName":
+                _isChangeFirstName = (bool)modelProperty.Value;
+                viewModelPropertyNames.Add(nameof(IsChangeFirstName));
+                break;
+            case "IsChangeMiddleName":
+                _isChangeMiddleName = (bool)modelProperty.Value;
+                viewModelPropertyNames.Add(nameof(IsChangeMiddleName));
+                break;
+            case "IsChangeLastName":
+                _isChangeLastName = (bool)modelProperty.Value;
+                viewModelPropertyNames.Add(nameof(IsChangeLastName));
+                break;
+            default:
+                throw new NotImplementedException();
         }
-        NotifyPropertiesChanged(changedNames);
     }
+    #endregion 基底クラスで抽象メソッドとして定義し、サブクラスでそれを実装すべきもの
 
+    #region privateメンバ
+    readonly MyModel _model;
+    bool _isChangeTargetSelectable = true;
+    bool _isChangeFirstName;
+    bool _isChangeMiddleName;
+    bool _isChangeLastName;
+    #endregion privateメンバ
+
+    #region privateメソッド
     /// <summary>
     /// 表示用の名前を更新する。
     /// 
@@ -163,4 +183,5 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
         if (string.IsNullOrWhiteSpace(name)) return "";
         return char.ToUpper(name[0]) + name[1..].ToLower();
     }
+    #endregion privateメソッド
 }

@@ -173,36 +173,7 @@ public class MyModel
     void NotifyToListeners(ChangedProperty changedProperty) => NotifyToListeners([changedProperty]);
     #endregion 後で基底クラスを作って、そちらに移動させるべきもの
 
-    #region 基底クラスで抽象メソッドとして宣言し、サブクラスでそれを実装すべきもの
-    /// <summary>
-    /// VMが本クラスにリスナー登録してきた際に、現在のプロパティの内容を初期値として通知するためのもの
-    /// </summary>
-    /// <param name="propertyName"></param>
-    /// <returns></returns>
-    /// <exception cref="InvalidOperationException"></exception>
-    ChangedProperty CreateCurrentProperty(string propertyName)
-    {
-        switch (propertyName)
-        {
-            case "FirstName":
-                return new ChangedProperty("FirstName", _firstName);
-            case "MiddleName":
-                return new ChangedProperty("MiddleName", _middleName);
-            case "LastName":
-                return new ChangedProperty("LastName", _lastName);
-            default:
-                throw new NotImplementedException($"Unknown property name: {propertyName}");
-        }
-    }
-    #endregion 基底クラスで抽象メソッドとして宣言し、サブクラスでそれを実装すべきもの
-
-    #region サブクラス側で定義すべきもの
-    string _firstName = "JAMES";
-    string _middleName = "MARIE";
-    string _lastName = "SMITH";
-
-    readonly Random _rand = new();
-
+    #region VMに開陳するメソッド群
     public void SetFirstName(string value)
     {
         EnqueueCommand(() =>
@@ -249,7 +220,7 @@ public class MyModel
                     SetNewName(ref _lastName, ["", "SMITH", "JOHNSON", "WILLIAMS"]);
                     if ((_lastName.Length == 0) && (_middleName.Length != 0))
                     {
-                        _middleName = ""; // LastNameが空ならMiddleNameも空にする
+                        _middleName = ""; // LastNameが空になったらMiddleNameも空にする
                         NotifyToListeners([new ChangedProperty("MiddleName", _middleName), new ChangedProperty("LastName", _lastName)]);
                     }
                     else
@@ -260,7 +231,39 @@ public class MyModel
             }
         });
     }
+    #endregion VMに開陳するメソッド群
 
+    #region 基底クラスで抽象メソッドとして宣言し、サブクラスでそれを実装すべきもの
+    /// <summary>
+    /// VMが本クラスにリスナー登録してきた際に、現在のプロパティの内容を初期値として通知するためのもの
+    /// </summary>
+    /// <param name="propertyName"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    ChangedProperty CreateCurrentProperty(string propertyName)
+    {
+        switch (propertyName)
+        {
+            case "FirstName":
+                return new ChangedProperty("FirstName", _firstName);
+            case "MiddleName":
+                return new ChangedProperty("MiddleName", _middleName);
+            case "LastName":
+                return new ChangedProperty("LastName", _lastName);
+            default:
+                throw new NotImplementedException($"Unknown property name: {propertyName}");
+        }
+    }
+    #endregion 基底クラスで抽象メソッドとして宣言し、サブクラスでそれを実装すべきもの
+
+    #region privateメンバ
+    string _firstName = "JAMES";
+    string _middleName = "MARIE";
+    string _lastName = "SMITH";
+    readonly Random _rand = new();
+    #endregion privateメンバ
+
+    #region privateメソッド
     static void SetNewName(ref string currentName, string[] newNameCandidates)
     {
         string newName;
@@ -270,5 +273,5 @@ public class MyModel
         } while (newName == currentName);
         currentName = newName;
     }
-    #endregion サブクラス側で定義すべきもの
+    #endregion privateメソッド
 }

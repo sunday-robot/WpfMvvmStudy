@@ -4,7 +4,7 @@ using System.Windows;
 
 namespace IdealAppStudy;
 
-public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedListener
+public sealed class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedListener
 {
     #region 基底クラスを設け、そちらに移すべきもの
     /// <summary>
@@ -16,20 +16,19 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
 
     /// <summary>
     /// IPropertiesChangedListener の実装
-    /// Mからの通知を受け、VMがVに対して開陳するプロパティを更新し、Vに通知する。
+    /// Mから通知されたデータモデル更新内容を、VMのプロパティに反映し、Vに通知する。
     /// </summary>
     /// <param name="modelProperties"></param>
     public void OnPropertiesChanged(List<ChangedProperty> modelProperties)
     {
         Application.Current.Dispatcher.Invoke(() =>
         {
-            var viewModelPropertyNames = new List<string>();
-
-            // VMがVに対して開陳するプロパティを更新する。
+            // VMのプロパティを更新する
+            var viewModelPropertyNames = new HashSet<string>();
             foreach (var changedModelProperty in modelProperties)
                 UpdateViewModelProperties(changedModelProperty, viewModelPropertyNames);
 
-            // Vに対してVMのプロパティ群の更新を通知する。
+            // 更新されたVMのプロパティ名群をVに通知する。
             NotifyPropertiesChanged(viewModelPropertyNames);
         });
     }
@@ -38,7 +37,7 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
     /// Vに対してプロパティ群の更新を通知する
     /// </summary>
     /// <param name="propertyNames"></param>
-    protected void NotifyPropertiesChanged(IEnumerable<string> propertyNames)
+    void NotifyPropertiesChanged(IEnumerable<string> propertyNames)
     {
         foreach (var name in propertyNames)
             NotifyPropertyChanged(name);
@@ -52,9 +51,13 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     #endregion 基底クラスを設け、そちらに移すべきもの
 
-    #region メンバ変数
-    readonly MyModel _model;
-    #endregion メンバ変数
+    public MainWindowViewModel(MyModel model)
+    {
+        _model = model;
+        model.AddListener(this, ["FirstName", "MiddleName", "LastName"]);
+
+        ChangeNameRandomlyCommand = new RelayCommand(() => model.ChangeNameRandomly());
+    }
 
     #region Vに開陳するプロパティ
     public string FirstName { get; private set; } = "";
@@ -64,16 +67,15 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
     public RelayCommand ChangeNameRandomlyCommand { get; }
     #endregion Vに開陳するプロパティ
 
-    public MainWindowViewModel(MyModel model)
-    {
-        _model = model;
-        model.AddListener(this, ["FirstName", "MiddleName", "LastName"]);
-
-        ChangeNameRandomlyCommand = new RelayCommand(() => model.ChangeNameRandomly());
-    }
-
-    #region 基底クラスで中小メソッドして定義し、サブクラスでそれを実装すべきもの
-    void UpdateViewModelProperties(ChangedProperty modelProperty, ICollection<string> viewModelPropertyNames)
+    #region 基底クラスで抽象メソッドとして定義し、サブクラスでそれを実装すべきもの
+    /// <summary>
+    /// Mのデータモデル更新内容を、VMのプロパティに反映する。
+    /// また、更新したVMのプロパティ名群をviewModelPropertyNamesに追加する。
+    /// </summary>
+    /// <param name="modelProperty"></param>
+    /// <param name="viewModelPropertyNames"></param>
+    /// <exception cref="NotImplementedException"></exception>
+    void UpdateViewModelProperties(ChangedProperty modelProperty, ISet<string> viewModelPropertyNames)
     {
         switch (modelProperty.Name)
         {
@@ -99,8 +101,13 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
                 throw new NotImplementedException($"Unknown model property name: {modelProperty.Name}");
         }
     }
-    #endregion 基底クラスで中小メソッドして定義し、サブクラスでそれを実装すべきもの
+    #endregion 基底クラスで抽象メソッドとして定義し、サブクラスでそれを実装すべきもの
 
+    #region privateメンバ
+    readonly MyModel _model;
+    #endregion privateメンバ
+
+    #region privateメソッド
     /// <summary>
     /// 表示用の名前を更新する。
     /// 
@@ -128,4 +135,5 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
         if (string.IsNullOrWhiteSpace(name)) return "";
         return char.ToUpper(name[0]) + name[1..].ToLower();
     }
+    #endregion privateメソッド
 }
