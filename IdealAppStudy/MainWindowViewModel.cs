@@ -4,7 +4,7 @@ using System.Windows;
 
 namespace IdealAppStudy;
 
-public sealed class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedListener
+public sealed class MainWindowViewModel : INotifyPropertyChanged, IModelPropertiesChangedListener
 {
     #region 基底クラスを設け、そちらに移すべきもの
     /// <summary>
@@ -19,14 +19,14 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IPropertiesCha
     /// Mから通知されたデータモデル更新内容を、VMのプロパティに反映し、Vに通知する。
     /// </summary>
     /// <param name="modelProperties"></param>
-    public void OnPropertiesChanged(List<ChangedProperty> modelProperties)
+    public void OnPropertiesChanged(List<ModelPropertyDifference> modelPropertyDifferences)
     {
         Application.Current.Dispatcher.Invoke(() =>
         {
             // VMのプロパティを更新する
             var viewModelPropertyNames = new HashSet<string>();
-            foreach (var changedModelProperty in modelProperties)
-                UpdateViewModelProperties(changedModelProperty, viewModelPropertyNames);
+            foreach (var modelPropertyDifference in modelPropertyDifferences)
+                UpdateViewModelProperties(modelPropertyDifference, viewModelPropertyNames);
 
             // 更新されたVMのプロパティ名群をVに通知する。
             NotifyPropertiesChanged(viewModelPropertyNames);
@@ -75,30 +75,30 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IPropertiesCha
     /// <param name="modelProperty"></param>
     /// <param name="viewModelPropertyNames"></param>
     /// <exception cref="NotImplementedException"></exception>
-    void UpdateViewModelProperties(ChangedProperty modelProperty, ISet<string> viewModelPropertyNames)
+    void UpdateViewModelProperties(ModelPropertyDifference modelPropertyDifference, HashSet<string> viewModelPropertyNames)
     {
-        switch (modelProperty.Name)
+        switch (modelPropertyDifference.Name)
         {
             case "FirstName":
-                FirstName = (string)modelProperty.Value;
+                FirstName = (string)((ModelPropertyDifference.Scalar)modelPropertyDifference).Value;
                 UpdateDisplayName();
                 viewModelPropertyNames.Add(nameof(FirstName));
                 viewModelPropertyNames.Add(nameof(DisplayName));
                 break;
             case "MiddleName":
-                MiddleName = (string)modelProperty.Value;
+                MiddleName = (string)((ModelPropertyDifference.Scalar)modelPropertyDifference).Value;
                 UpdateDisplayName();
                 viewModelPropertyNames.Add(nameof(MiddleName));
                 viewModelPropertyNames.Add(nameof(DisplayName));
                 break;
             case "LastName":
-                LastName = (string)modelProperty.Value;
+                LastName = (string)((ModelPropertyDifference.Scalar)modelPropertyDifference).Value;
                 UpdateDisplayName();
                 viewModelPropertyNames.Add(nameof(LastName));
                 viewModelPropertyNames.Add(nameof(DisplayName));
                 break;
             default:
-                throw new NotImplementedException($"Unknown model property name: {modelProperty.Name}");
+                throw new NotImplementedException($"Unknown model property name: {modelPropertyDifference.Name}");
         }
     }
     #endregion 基底クラスで抽象メソッドとして定義し、サブクラスでそれを実装すべきもの

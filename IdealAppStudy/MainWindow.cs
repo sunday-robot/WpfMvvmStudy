@@ -3,7 +3,7 @@ using System.Windows.Controls;
 
 namespace IdealAppStudy;
 
-public class MainWindow : Window
+public sealed class MainWindow : Window
 {
     public MainWindow(MainWindowViewModel viewModel)
     {

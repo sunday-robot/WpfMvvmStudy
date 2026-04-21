@@ -41,7 +41,7 @@ public class MyModel
     /// キー:プロパティ名<br>
     /// 値:当該プロパティの変更に関心のあるリスナーの集合<br>
     /// </summary>
-    readonly Dictionary<string, HashSet<IPropertiesChangedListener>> _propertyNameToListeners = [];
+    readonly Dictionary<string, HashSet<IModelPropertiesChangedListener>> _propertyNameToListeners = [];
 
     public MyModel()
     {
@@ -58,7 +58,7 @@ public class MyModel
     /// </summary>
     /// <param name="listener"></param>
     /// <param name="interestedPropertyNames">リスナーが関心のあるプロパティ名のセット</param>
-    public void AddListener(IPropertiesChangedListener listener, params string[] interestedPropertyNames)
+    public void AddListener(IModelPropertiesChangedListener listener, params string[] interestedPropertyNames)
     {
         // プロパティ名からリスナー群を取得するための辞書に、リスナーを追加する
         foreach (var name in interestedPropertyNames)
@@ -72,9 +72,9 @@ public class MyModel
         }
 
         // 登録されたリスナーに、関心のあるプロパティの現在値(リスナーにとっては初期値)を通知する。これ以降は差分が通知される。
-        var currentProperties = new List<ChangedProperty>();
+        var currentProperties = new List<ModelPropertyDifference>();
         foreach (var name in interestedPropertyNames)
-            currentProperties.Add(CreateCurrentProperty(name));
+            currentProperties.AddRange(CreateCurrentProperty(name));
         listener.OnPropertiesChanged(currentProperties);
     }
 
@@ -82,7 +82,7 @@ public class MyModel
     /// リスナーの登録を解除する。
     /// </summary>
     /// <param name="listener"></param>
-    public void RemoveListener(IPropertiesChangedListener listener)
+    public void RemoveListener(IModelPropertiesChangedListener listener)
     {
         foreach (var propertyName in _propertyNameToListeners.Keys)
             _propertyNameToListeners[propertyName].Remove(listener);
@@ -148,29 +148,29 @@ public class MyModel
     /// リスナーに、データモデルの更新内容を通知する
     /// </summary>
     /// <param name="changedProperties">更新されたプロパティ名と、更新の内容</param>
-    void NotifyToListeners(IEnumerable<ChangedProperty> changedProperties)
+    void NotifyToListeners(IEnumerable<ModelPropertyDifference> propertyDifferences)
     {
         // リスナー別に、通知プロパティセットを構築する
-        var changedPropertiesDictionary = new Dictionary<IPropertiesChangedListener, List<ChangedProperty>>();
-        foreach (var changedProperty in changedProperties)
+        var propertyDifferencesDictionary = new Dictionary<IModelPropertiesChangedListener, List<ModelPropertyDifference>>();
+        foreach (var propertyDifference in propertyDifferences)
         {
-            foreach (var listener in _propertyNameToListeners.GetValueOrDefault(changedProperty.Name, []))
+            foreach (var listener in _propertyNameToListeners.GetValueOrDefault(propertyDifference.Name, []))
             {
-                if (!changedPropertiesDictionary.TryGetValue(listener, out List<ChangedProperty>? props))
+                if (!propertyDifferencesDictionary.TryGetValue(listener, out List<ModelPropertyDifference>? differences))
                 {
-                    props = [];
-                    changedPropertiesDictionary[listener] = props;
+                    differences = [];
+                    propertyDifferencesDictionary[listener] = differences;
                 }
-                props.Add(changedProperty);
+                differences.Add(propertyDifference);
             }
         }
 
         // 各リスナーにプロパティセットを通知する
-        foreach (var (listener, properties) in changedPropertiesDictionary)
-            listener.OnPropertiesChanged(properties);
+        foreach (var (listener, diffs) in propertyDifferencesDictionary)
+            listener.OnPropertiesChanged(diffs);
     }
 
-    void NotifyToListeners(ChangedProperty changedProperty) => NotifyToListeners([changedProperty]);
+    void NotifyToListeners(ModelPropertyDifference propertyDifference) => NotifyToListeners([propertyDifference]);
     #endregion 後で基底クラスを作って、そちらに移動させるべきもの
 
     #region VMに開陳するメソッド群
@@ -179,7 +179,7 @@ public class MyModel
         EnqueueCommand(() =>
         {
             _firstName = value.ToUpper();
-            NotifyToListeners(new ChangedProperty("FirstName", _firstName));
+            NotifyToListeners(new ModelPropertyDifference.Scalar("FirstName", _firstName));
         });
     }
 
@@ -188,7 +188,7 @@ public class MyModel
         EnqueueCommand(() =>
         {
             _middleName = value.ToUpper();
-            NotifyToListeners(new ChangedProperty("MiddleName", _middleName));
+            NotifyToListeners(new ModelPropertyDifference.Scalar("MiddleName", _middleName));
         });
     }
 
@@ -197,7 +197,7 @@ public class MyModel
         EnqueueCommand(() =>
         {
             _lastName = value.ToUpper();
-            NotifyToListeners(new ChangedProperty("LastName", _lastName));
+            NotifyToListeners(new ModelPropertyDifference.Scalar("LastName", _lastName));
         });
     }
 
@@ -210,22 +210,22 @@ public class MyModel
             {
                 case 0:
                     SetNewName(ref _firstName, ["JAMES", "MARY", "MICHAEL"]);
-                    NotifyToListeners(new ChangedProperty("FirstName", _firstName));
+                    NotifyToListeners(new ModelPropertyDifference.Scalar("FirstName", _firstName));
                     break;
                 case 1:
                     SetNewName(ref _middleName, ["", "MARIE", "ROSE", "LEE"]);
-                    NotifyToListeners(new ChangedProperty("MiddleName", _middleName));
+                    NotifyToListeners(new ModelPropertyDifference.Scalar("MiddleName", _middleName));
                     break;
                 case 2:
                     SetNewName(ref _lastName, ["", "SMITH", "JOHNSON", "WILLIAMS"]);
                     if ((_lastName.Length == 0) && (_middleName.Length != 0))
                     {
                         _middleName = ""; // LastNameが空になったらMiddleNameも空にする
-                        NotifyToListeners([new ChangedProperty("MiddleName", _middleName), new ChangedProperty("LastName", _lastName)]);
+                        NotifyToListeners([new ModelPropertyDifference.Scalar("MiddleName", _middleName), new ModelPropertyDifference.Scalar("LastName", _lastName)]);
                     }
                     else
                     {
-                        NotifyToListeners(new ChangedProperty("LastName", _lastName));
+                        NotifyToListeners(new ModelPropertyDifference.Scalar("LastName", _lastName));
                     }
                     break;
             }
@@ -240,19 +240,15 @@ public class MyModel
     /// <param name="propertyName"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    ChangedProperty CreateCurrentProperty(string propertyName)
+    ModelPropertyDifference CreateCurrentProperty(string propertyName)
     {
-        switch (propertyName)
+        return propertyName switch
         {
-            case "FirstName":
-                return new ChangedProperty("FirstName", _firstName);
-            case "MiddleName":
-                return new ChangedProperty("MiddleName", _middleName);
-            case "LastName":
-                return new ChangedProperty("LastName", _lastName);
-            default:
-                throw new NotImplementedException($"Unknown property name: {propertyName}");
-        }
+            "FirstName" => new ModelPropertyDifference.Scalar("FirstName", _firstName),
+            "MiddleName" => new ModelPropertyDifference.Scalar("MiddleName", _middleName),
+            "LastName" => new ModelPropertyDifference.Scalar("LastName", _lastName),
+            _ => throw new NotImplementedException($"Unknown property name: {propertyName}"),
+        };
     }
     #endregion 基底クラスで抽象メソッドとして宣言し、サブクラスでそれを実装すべきもの
 
