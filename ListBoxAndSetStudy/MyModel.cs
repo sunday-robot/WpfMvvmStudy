@@ -175,7 +175,7 @@ public class MyModel
                 Debug.WriteLine($"Name already exists: {value}");
                 return;
             }
-            NotifyToListeners(new ModelPropertyDifference.Set.Add("FriendNames", value));
+            NotifyToListeners(new ModelPropertyDifference.Set("FriendNames", [value], []));
         });
     }
 
@@ -189,7 +189,7 @@ public class MyModel
                 Debug.WriteLine($"Name does not exists: {value}");
                 return;
             }
-            NotifyToListeners(new ModelPropertyDifference.Set.Delete("FriendNames", value));
+            NotifyToListeners(new ModelPropertyDifference.Set("FriendNames", [], [value]));
         });
     }
     #endregion VMに開陳するメソッド群
@@ -201,20 +201,13 @@ public class MyModel
     /// <param name="propertyName"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    List<ModelPropertyDifference> CreateCurrentProperty(string propertyName)
+    ModelPropertyDifference CreateCurrentProperty(string propertyName)
     {
-        switch (propertyName)
+        return propertyName switch
         {
-            case "FriendNames":
-                {
-                    var diffs = new List<ModelPropertyDifference>();
-                    foreach (var name in _friendNames)
-                        diffs.Add(new ModelPropertyDifference.Set.Add("FriendNames", name));
-                    return diffs;
-                }
-            default:
-                throw new NotImplementedException($"Unknown property name: {propertyName}");
-        }
+            "FriendNames" => new ModelPropertyDifference.Set("FriendNames", new List<string>(_friendNames), []),
+            _ => throw new NotImplementedException($"Unknown property name: {propertyName}"),
+        };
     }
     #endregion 基底クラスで抽象メソッドとして宣言し、サブクラスでそれを実装すべきもの
 

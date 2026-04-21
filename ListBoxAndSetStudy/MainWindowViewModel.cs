@@ -107,17 +107,11 @@ public class MainWindowViewModel : INotifyPropertyChanged, IModelPropertiesChang
         switch (modelPropertyDifference.Name)
         {
             case "FriendNames":
-                switch (modelPropertyDifference)
-                {
-                    case ModelPropertyDifference.Set.Add add:
-                        FriendNames.Add(Capitalize((string)add.Value));
-                        break;
-                    case ModelPropertyDifference.Set.Delete delete:
-                        FriendNames.Remove(Capitalize((string)delete.Value));
-                        break;
-                    default:
-                        throw new UnreachableException();
-                }
+                var setDifference = (ModelPropertyDifference.Set)modelPropertyDifference;
+                foreach (var addValue in setDifference.AddElements)
+                    FriendNames.Add(Capitalize((string)addValue));
+                foreach (var deleteValue in setDifference.DeleteElements)
+                    FriendNames.Remove(Capitalize((string)deleteValue));
                 viewModelPropertyNames.Add(nameof(FriendNames));
                 break;
             default:
