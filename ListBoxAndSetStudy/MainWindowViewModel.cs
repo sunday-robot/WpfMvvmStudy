@@ -1,12 +1,12 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using static ListBoxAndSetStudy.CollectionDifference;
 
 namespace ListBoxAndSetStudy;
 
-public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedListener
+public class MainWindowViewModel : INotifyPropertyChanged, IModelPropertiesChangedListener
 {
     #region 基底クラスを設け、そちらに移すべきもの
     /// <summary>
@@ -18,20 +18,19 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
 
     /// <summary>
     /// IPropertiesChangedListener の実装
-    /// Mからの通知を受け、VMがVに対して開陳するプロパティを更新し、Vに通知する。
+    /// Mから通知されたデータモデル更新内容を、VMのプロパティに反映し、Vに通知する。
     /// </summary>
     /// <param name="modelProperties"></param>
-    public void OnPropertiesChanged(List<ChangedProperty> modelProperties)
+    public void OnPropertiesChanged(List<ModelPropertyDifference> modelPropertyDifferences)
     {
         Application.Current.Dispatcher.Invoke(() =>
         {
-            var viewModelPropertyNames = new List<string>();
+            // VMのプロパティを更新する
+            var viewModelPropertyNames = new HashSet<string>();
+            foreach (var modelPropertyDifference in modelPropertyDifferences)
+                UpdateViewModelProperties(modelPropertyDifference, viewModelPropertyNames);
 
-            // VMがVに対して開陳するプロパティを更新する。
-            foreach (var changedModelProperty in modelProperties)
-                UpdateViewModelProperties(changedModelProperty, viewModelPropertyNames);
-
-            // Vに対してVMのプロパティ群の更新を通知する。
+            // 更新されたVMのプロパティ名群をVに通知する。
             NotifyPropertiesChanged(viewModelPropertyNames);
         });
     }
@@ -40,7 +39,7 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
     /// Vに対してプロパティ群の更新を通知する
     /// </summary>
     /// <param name="propertyNames"></param>
-    protected void NotifyPropertiesChanged(IEnumerable<string> propertyNames)
+    void NotifyPropertiesChanged(IEnumerable<string> propertyNames)
     {
         foreach (var name in propertyNames)
             NotifyPropertyChanged(name);
@@ -54,11 +53,19 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     #endregion 基底クラスを設け、そちらに移すべきもの
 
-    #region メンバ変数
-    readonly MyModel _model;
-    private string? _selectedFriendName;
-    string _inputNameText = "";
-    #endregion メンバ変数
+    public MainWindowViewModel(MyModel model)
+    {
+        _model = model;
+        model.AddListener(this, ["FriendNames"]);
+
+        AddNameCommand = new RelayCommand(
+            () => model.AddName(InputNameText),
+            () => !string.IsNullOrWhiteSpace(InputNameText));
+
+        RemoveNameCommand = new RelayCommand(
+            () => model.RemoveName(SelectedFriendName ?? ""),
+            () => SelectedFriendName != null);
+    }
 
     #region Vに開陳するプロパティ
     public ObservableCollection<string> FriendNames { get; } = [];
@@ -87,50 +94,45 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
     public RelayCommand RemoveNameCommand { get; }
     #endregion Vに開陳するプロパティ
 
-    public MainWindowViewModel(MyModel model)
+    #region 基底クラスで抽象メソッドとして定義し、サブクラスでそれを実装すべきもの
+    /// <summary>
+    /// Mのデータモデル更新内容を、VMのプロパティに反映する。
+    /// また、更新したVMのプロパティ名群をviewModelPropertyNamesに追加する。
+    /// </summary>
+    /// <param name="modelProperty"></param>
+    /// <param name="viewModelPropertyNames"></param>
+    /// <exception cref="NotImplementedException"></exception>
+    void UpdateViewModelProperties(ModelPropertyDifference modelPropertyDifference, HashSet<string> viewModelPropertyNames)
     {
-        _model = model;
-        model.AddListener(this, ["FriendNames"]);
-
-        AddNameCommand = new RelayCommand(
-            () => model.AddName(InputNameText),
-            () => !string.IsNullOrWhiteSpace(InputNameText));
-
-        RemoveNameCommand = new RelayCommand(
-            () => model.RemoveName(SelectedFriendName ?? ""),
-            () => SelectedFriendName != null);
-    }
-
-    #region 基底クラスで中小メソッドして定義し、サブクラスでそれを実装すべきもの
-    void UpdateViewModelProperties(ChangedProperty modelProperty, ICollection<string> viewModelPropertyNames)
-    {
-        switch (modelProperty.Name)
+        switch (modelPropertyDifference.Name)
         {
             case "FriendNames":
-                foreach (var diff in (IEnumerable<CollectionDifference>)modelProperty.Value)
+                switch (modelPropertyDifference)
                 {
-                    switch (diff)
-                    {
-                        case Add add:
-                            FriendNames.Add(Capitalize((string)add.Value));
-                            break;
-                        case Update update:
-                            var index = FriendNames.IndexOf(Capitalize((string)update.OldValue));
-                            FriendNames[index] = Capitalize((string)update.NewValue);
-                            break;
-                        case Delete delete:
-                            FriendNames.Remove(Capitalize((string)delete.Value));
-                            break;
-                    }
+                    case ModelPropertyDifference.Set.Add add:
+                        FriendNames.Add(Capitalize((string)add.Value));
+                        break;
+                    case ModelPropertyDifference.Set.Delete delete:
+                        FriendNames.Remove(Capitalize((string)delete.Value));
+                        break;
+                    default:
+                        throw new UnreachableException();
                 }
                 viewModelPropertyNames.Add(nameof(FriendNames));
                 break;
             default:
-                throw new NotImplementedException($"Unknown model property name: {modelProperty.Name}");
+                throw new NotImplementedException($"Unknown model property name: {modelPropertyDifference.Name}");
         }
     }
-    #endregion 基底クラスで中小メソッドして定義し、サブクラスでそれを実装すべきもの
+    #endregion 基底クラスで抽象メソッドとして定義し、サブクラスでそれを実装すべきもの
 
+    #region privateメンバ
+    readonly MyModel _model;
+    string? _selectedFriendName;
+    string _inputNameText = "";
+    #endregion privateメンバ
+
+    #region privateメソッド
     /// <summary>
     /// nameを先頭大文字、残り小文字に変換する
     /// </summary>
@@ -141,4 +143,5 @@ public class MainWindowViewModel : INotifyPropertyChanged, IPropertiesChangedLis
         if (string.IsNullOrWhiteSpace(name)) return "";
         return char.ToUpper(name[0]) + name[1..].ToLower();
     }
+    #endregion privateメソッド
 }
