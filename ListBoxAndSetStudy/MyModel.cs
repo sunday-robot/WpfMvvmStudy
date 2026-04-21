@@ -164,37 +164,7 @@ public class MyModel
     void NotifyToListeners(ModelPropertyDifference propertyDifference) => NotifyToListeners([propertyDifference]);
     #endregion 後で基底クラスを作って、そちらに移動させるべきもの
 
-    #region 基底クラスで抽象メソッドとして宣言し、サブクラスでそれを実装すべきもの
-    /// <summary>
-    /// VMが本クラスにリスナー登録してきた際に、現在のプロパティの内容を初期値として通知するためのもの
-    /// </summary>
-    /// <param name="propertyName"></param>
-    /// <returns></returns>
-    /// <exception cref="InvalidOperationException"></exception>
-    List<ModelPropertyDifference> CreateCurrentProperty(string propertyName)
-    {
-        switch (propertyName)
-        {
-            case "FriendNames":
-                {
-                    var diffs = new List<ModelPropertyDifference>();
-                    foreach (var name in _friendNames)
-                        diffs.Add(new ModelPropertyDifference.Set.Add("FriendNames", name));
-                    return diffs;
-                }
-            default:
-                throw new NotImplementedException($"Unknown property name: {propertyName}");
-        }
-    }
-    #endregion 基底クラスで抽象メソッドとして宣言し、サブクラスでそれを実装すべきもの
-
-    #region サブクラス側で定義すべきもの
-    readonly HashSet<string> _friendNames = [
-        "ALICE",
-        "BOB",
-        "CHARLIE"
-    ];
-
+    #region VMに開陳するメソッド群
     public void AddName(string value)
     {
         EnqueueCommand(() =>
@@ -222,5 +192,40 @@ public class MyModel
             NotifyToListeners(new ModelPropertyDifference.Set.Delete("FriendNames", value));
         });
     }
-    #endregion サブクラス側で定義すべきもの
+    #endregion VMに開陳するメソッド群
+
+    #region 基底クラスで抽象メソッドとして宣言し、サブクラスでそれを実装すべきもの
+    /// <summary>
+    /// VMが本クラスにリスナー登録してきた際に、現在のプロパティの内容を初期値として通知するためのもの
+    /// </summary>
+    /// <param name="propertyName"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    List<ModelPropertyDifference> CreateCurrentProperty(string propertyName)
+    {
+        switch (propertyName)
+        {
+            case "FriendNames":
+                {
+                    var diffs = new List<ModelPropertyDifference>();
+                    foreach (var name in _friendNames)
+                        diffs.Add(new ModelPropertyDifference.Set.Add("FriendNames", name));
+                    return diffs;
+                }
+            default:
+                throw new NotImplementedException($"Unknown property name: {propertyName}");
+        }
+    }
+    #endregion 基底クラスで抽象メソッドとして宣言し、サブクラスでそれを実装すべきもの
+
+    #region privateメンバ
+    readonly HashSet<string> _friendNames = [
+        "ALICE",
+        "BOB",
+        "CHARLIE"
+    ];
+    #endregion privateメンバ
+
+    #region privateメソッド
+    #endregion privateメソッド
 }
