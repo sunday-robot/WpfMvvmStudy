@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace IdealAppStudy;
+namespace TabStudy;
 
 class Program
 {

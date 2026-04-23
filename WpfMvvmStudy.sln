@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RadioButtonStudy", "RadioBu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ListBoxAndSetStudy", "ListBoxAndSetStudy\ListBoxAndSetStudy.csproj", "{5D8AB451-085F-4ED6-9930-630FAF259BF4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TabStudy", "TabStudy\TabStudy.csproj", "{BDCAB7DF-20F4-41CB-9E6C-0560C4FD71A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{5D8AB451-085F-4ED6-9930-630FAF259BF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D8AB451-085F-4ED6-9930-630FAF259BF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5D8AB451-085F-4ED6-9930-630FAF259BF4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDCAB7DF-20F4-41CB-9E6C-0560C4FD71A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDCAB7DF-20F4-41CB-9E6C-0560C4FD71A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDCAB7DF-20F4-41CB-9E6C-0560C4FD71A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDCAB7DF-20F4-41CB-9E6C-0560C4FD71A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
