@@ -14,10 +14,12 @@
 /LabelStudy/bin
 /LabelStudy/obj
 /CheckBoxStudy/obj
-/CheckBoxStudy/bin/Debug/net10.0-windows
-/RadioButtonStudy/bin/Debug/net10.0-windows
+/CheckBoxStudy/bin
+/RadioButtonStudy/bin
 /RadioButtonStudy/obj
-/ListBoxAndSetStudy/bin/Debug/net10.0-windows
+/ListBoxAndSetStudy/bin
 /ListBoxAndSetStudy/obj
 /TabStudy/obj
-/TabStudy/bin/Debug/net10.0-windows
+/TabStudy/bin
+/ListBoxAndMapStudy/bin
+/ListBoxAndMapStudy/obj

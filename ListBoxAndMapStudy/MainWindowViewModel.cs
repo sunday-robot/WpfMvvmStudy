@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows;
 
-namespace ListBoxAndSetStudy;
+namespace ListBoxAndMapStudy;
 
 public class MainWindowViewModel : INotifyPropertyChanged, IModelPropertiesChangedListener
 {
@@ -56,15 +56,16 @@ public class MainWindowViewModel : INotifyPropertyChanged, IModelPropertiesChang
     public MainWindowViewModel(MyModel model)
     {
         _model = model;
-        model.AddListener(this, ["FriendNames"]);
 
         AddNameCommand = new RelayCommand(
-            () => model.AddName(InputNameText),
+            () => model.AddFriend(InputNameText),
             () => !string.IsNullOrWhiteSpace(InputNameText));
 
         RemoveNameCommand = new RelayCommand(
-            () => model.RemoveName(SelectedFriendName ?? ""),
+            () => model.RemoveFriend(SelectedFriendName ?? ""),
             () => SelectedFriendName != null);
+
+        model.AddListener(this, ["FriendNames", "ActiveFriendName", "ActiveFriendAddress", "ActiveFriendDescription"]);
     }
 
     #region Vに開陳するプロパティ
@@ -76,11 +77,13 @@ public class MainWindowViewModel : INotifyPropertyChanged, IModelPropertiesChang
         {
             if (_selectedFriendName != value)
             {
-                _selectedFriendName = value;
-                RemoveNameCommand.RaiseCanExecuteChanged();
+                _model.SetActiveFirent(value);
             }
         }
     }
+    public string? SelectedFriendAddress { get; private set; }
+    public string? SelectedFriendDescription { get; private set; }
+
     public string InputNameText
     {
         get => _inputNameText;
@@ -116,6 +119,28 @@ public class MainWindowViewModel : INotifyPropertyChanged, IModelPropertiesChang
                 foreach (var deleteValue in setDifference.DeleteElements)
                     FriendNames.Remove(Capitalize((string)deleteValue));
                 viewModelPropertyNames.Add(nameof(FriendNames));
+                break;
+            case "ActiveFriendName":
+                {
+                    var scalarDifference = (ModelPropertyDifference.Scalar)modelPropertyDifference;
+                    _selectedFriendName = (string?)scalarDifference.Value;
+                    viewModelPropertyNames.Add(nameof(SelectedFriendName));
+                    RemoveNameCommand.RaiseCanExecuteChanged();
+                }
+                break;
+            case "ActiveFriendAddress":
+                {
+                    var scalarDifference = (ModelPropertyDifference.Scalar)modelPropertyDifference;
+                    SelectedFriendAddress = (string?)scalarDifference.Value;
+                    viewModelPropertyNames.Add(nameof(SelectedFriendAddress));
+                }
+                break;
+            case "ActiveFriendDescription":
+                {
+                    var scalarDifference = (ModelPropertyDifference.Scalar)modelPropertyDifference;
+                    SelectedFriendDescription = (string?)scalarDifference.Value;
+                    viewModelPropertyNames.Add(nameof(SelectedFriendDescription));
+                }
                 break;
             default:
                 throw new NotImplementedException($"Unknown model property name: {modelPropertyDifference.Name}");
