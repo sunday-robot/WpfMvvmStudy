@@ -118,11 +118,11 @@ public class MainWindowViewModel : INotifyPropertyChanged, IModelPropertiesChang
                             FriendNames.Add(Capitalize((string)value));
                         break;
                     case ModelPropertyDifference.Set.Add add:
-                        foreach (var addValue in add.AddValues)
+                        foreach (var addValue in add.Values)
                             FriendNames.Add(Capitalize((string)addValue));
                         break;
                     case ModelPropertyDifference.Set.Remove remove:
-                        foreach (var deleteValue in remove.RemoveValues)
+                        foreach (var deleteValue in remove.Values)
                             FriendNames.Remove(Capitalize((string)deleteValue));
                         break;
                     default:
