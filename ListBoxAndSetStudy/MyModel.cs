@@ -175,7 +175,7 @@ public class MyModel
                 Debug.WriteLine($"Name already exists: {value}");
                 return;
             }
-            NotifyToListeners(new ModelPropertyDifference.Set("FriendNames", [value], []));
+            NotifyToListeners(new ModelPropertyDifference.Set.Add("FriendNames", [value]));
         });
     }
 
@@ -189,7 +189,7 @@ public class MyModel
                 Debug.WriteLine($"Name does not exists: {value}");
                 return;
             }
-            NotifyToListeners(new ModelPropertyDifference.Set("FriendNames", [], [value]));
+            NotifyToListeners(new ModelPropertyDifference.Set.Remove("FriendNames", [value]));
         });
     }
     #endregion VMに開陳するメソッド群
@@ -205,7 +205,7 @@ public class MyModel
     {
         return propertyName switch
         {
-            "FriendNames" => new ModelPropertyDifference.Set("FriendNames", new List<string>(_friendNames), []),
+            "FriendNames" => new ModelPropertyDifference.Set.Initialize("FriendNames", new List<string>(_friendNames)),
             _ => throw new NotImplementedException($"Unknown property name: {propertyName}"),
         };
     }
