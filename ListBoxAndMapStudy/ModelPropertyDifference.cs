@@ -13,12 +13,26 @@ public abstract record ModelPropertyDifference(string Name)
     /// <param name="Value"></param>
     public sealed record Scalar(string Name, object? Value) : ModelPropertyDifference(Name);
 
+    public abstract record Set(string Name, IEnumerable<object> Values) : ModelPropertyDifference(Name)
+    {
     /// <summary>
-    /// Set(集合)プロパティの更新内容の差分を保持するもの
+        /// Set(集合)プロパティの現在の値(VMにとっては初期値)を保持するもの
     /// </summary>
-    /// <param name="AddElements">追加された要素のリスト</param>
-    /// <param name="DeleteElements">削除された要素のリスト</param>
-    public sealed record Set(string Name, IEnumerable<object> AddElements, IEnumerable<object> DeleteElements) : ModelPropertyDifference(Name);
+        /// <param name="Values">値の集合</param>
+        public sealed record Initialize(string Name, IEnumerable<object> Values) : Set(Name, Values);
+
+        /// <summary>
+        /// Set(集合)プロパティに追加された値を保持するもの
+        /// </summary>
+        /// <param name="Values">追加された値の集合</param>
+        public sealed record Add(string Name, IEnumerable<object> Values) : Set(Name, Values);
+
+        /// <summary>
+        /// Set(集合)プロパティから削除された値を保持するもの
+        /// </summary>
+        /// <param name="Values">削除された値の集合</param>
+        public sealed record Remove(string Name, IEnumerable<object> Values) : Set(Name, Values);
+    }
 
     /// <summary>
     /// Map(写像、辞書)プロパティの更新内容の差分を保持するもの

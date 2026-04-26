@@ -175,7 +175,7 @@ public class MyModel
                 Debug.WriteLine($"Name already exists: {value}");
                 return;
             }
-            NotifyToListeners(new ModelPropertyDifference.Set("FriendNames", [value], []));
+            NotifyToListeners(new ModelPropertyDifference.Set.Add("FriendNames", [value]));
         });
     }
 
@@ -189,7 +189,7 @@ public class MyModel
                 Debug.WriteLine($"Name does not exists: {value}");
                 return;
             }
-            NotifyToListeners(new ModelPropertyDifference.Set("FriendNames", [], [value]));
+            NotifyToListeners(new ModelPropertyDifference.Set.Remove("FriendNames", [value]));
         });
     }
 
@@ -226,7 +226,7 @@ public class MyModel
     {
         return propertyName switch
         {
-            "FriendNames" => new ModelPropertyDifference.Set("FriendNames", new List<string>(_friends.Keys), []),
+            "FriendNames" => new ModelPropertyDifference.Set.Initialize("FriendNames", new List<string>(_friends.Keys)),
             "ActiveFriendName" => new ModelPropertyDifference.Scalar("ActiveFriendName", _activeFriendName),
             "ActiveFriendAddress" => new ModelPropertyDifference.Scalar("ActiveFriendAddress", _activeFriendName != null ? _friends[_activeFriendName].Address : null),
             "ActiveFriendDescription" => new ModelPropertyDifference.Scalar("ActiveFriendDescription", _activeFriendName != null ? _friends[_activeFriendName].Description : null),

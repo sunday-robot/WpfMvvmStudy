@@ -113,11 +113,24 @@ public class MainWindowViewModel : INotifyPropertyChanged, IModelPropertiesChang
         switch (modelPropertyDifference.Name)
         {
             case "FriendNames":
-                var setDifference = (ModelPropertyDifference.Set)modelPropertyDifference;
-                foreach (var addValue in setDifference.AddElements)
-                    FriendNames.Add(Capitalize((string)addValue));
-                foreach (var deleteValue in setDifference.DeleteElements)
-                    FriendNames.Remove(Capitalize((string)deleteValue));
+                switch (modelPropertyDifference)
+                {
+                    case ModelPropertyDifference.Set.Initialize initialize:
+                        FriendNames.Clear();
+                        foreach (var value in initialize.Values)
+                            FriendNames.Add(Capitalize((string)value));
+                        break;
+                    case ModelPropertyDifference.Set.Add add    :
+                        foreach (var addValue in add.Values)
+                            FriendNames.Add(Capitalize((string)addValue));
+                        break;
+                    case ModelPropertyDifference.Set.Remove remove:
+                        foreach (var deleteValue in remove.Values)
+                            FriendNames.Remove(Capitalize((string)deleteValue));
+                        break;
+                    default:
+                        throw new NotImplementedException($"Unknown model property difference type: {modelPropertyDifference.GetType().Name}");
+                }
                 viewModelPropertyNames.Add(nameof(FriendNames));
                 break;
             case "ActiveFriendName":
